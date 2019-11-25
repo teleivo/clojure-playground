@@ -5,10 +5,12 @@
   ([f]
    (retry f 3))
   ([f times]
-   (if-let [result (try
-                     (f)
-                     (catch Exception e
-                       (when (= 1 times)
-                         (throw (ex-info "retry exceeded number of retries" {:retries 3} e)))))]
-     result
-     (recur f (dec times)))))
+   (fn [& args]
+     (loop [times times]
+       (if-let [result (try
+                         (apply f args)
+                         (catch Exception e
+                           (when (= 1 times)
+                             (throw (ex-info "retry exceeded number of retries" {:retries 3} e)))))]
+         result
+         (recur (dec times)))))))
